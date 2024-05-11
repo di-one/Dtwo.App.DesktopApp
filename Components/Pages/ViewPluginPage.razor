@@ -1,0 +1,9 @@
+﻿@page "/viewplugin/{PageName}"
+
+<PageTitle>@PageName</PageTitle>
+<Dtwo.App.DesktopApp.Components.Plugins.ViewPluginTemplate TemplateName="@PageName"></Dtwo.App.DesktopApp.Components.Plugins.ViewPluginTemplate>
+
+@code {
+	[Parameter]
+    public string PageName { get; set; }
+}

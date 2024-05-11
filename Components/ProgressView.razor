@@ -1,0 +1,61 @@
+﻿@* @implements IDisposable;
+
+@if (onProgress)
+{
+		<div Class="fullscreen_loader">
+		<MatProgressCircle style="position: fixed;left: 50%;top: 50%;transform: translate(-50%, -50%);" Indeterminate="@indeterminate" Progress="@step" Size="MatProgressCircleSize.Large" />
+
+	</div>
+
+	<MudOverlay Visible="@onProgress" DarkBackground="true">
+		<MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
+	</MudOverlay>
+
+	<div class="rz-dialog-wrapper">
+		<DtwoCircularProgressBar Mode="EProgressBarMode.Indeterminate" Size="ECircularProgressBarSize.Large" Style="EProgressBarStyle.Secondary" ShowValue="false" />
+	</div>
+}
+
+@code {
+	private int step;
+	private bool onProgress = ViewManager.IsOnProgress;
+	private bool indeterminate = true;
+
+	protected override void OnInitialized()
+	{
+		ViewManager.OnProgressStart += OnProgressStart;
+		ViewManager.OnProgressStop += OnProgressStop;
+		ViewManager.OnProgressStep += OnProgressStep;
+
+		base.OnInitialized();
+	}
+
+	private void OnProgressStart()
+	{
+		onProgress = true;
+
+		this.InvokeAsync(() => StateHasChanged());
+	}
+
+	private void OnProgressStop()
+	{
+		onProgress = false;
+
+		this.InvokeAsync(() => StateHasChanged());
+	}
+
+	private void OnProgressStep(int step)
+	{
+		this.step = step;
+
+		this.InvokeAsync(() => StateHasChanged());
+	}
+
+	public void Dispose()
+	{
+		ViewManager.OnProgressStart -= OnProgressStart;
+		ViewManager.OnProgressStop -= OnProgressStop;
+		ViewManager.OnProgressStep -= OnProgressStep;
+	}
+}
+ *@

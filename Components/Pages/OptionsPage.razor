@@ -1,0 +1,18 @@
+﻿@page "/Options"
+
+<DtwoGrid Gap="2rem" class="rz-p-0 rz-p-lg-4">
+    <DtwoGridItem Size="12">
+        <DtwoForm TValue="Dtwo.API.Configuration.PathsConfiguration" Value="@Paths.Config" FormData="@OptionsFormData" />
+    </DtwoGridItem>
+</DtwoGrid>
+
+@code {
+    private FormData OptionsFormData = new FormData("Chemins", new List<FormData.Field>()
+    {
+        new FormData.Field()
+        {
+            FieldAsmName = nameof(Paths.Config.JpexsPath),
+            Title = "Chemin de JPEXS (facultatif)",
+        }
+    });
+}

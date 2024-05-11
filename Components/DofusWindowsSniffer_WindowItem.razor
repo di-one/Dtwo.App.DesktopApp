@@ -1,0 +1,60 @@
+﻿@implements IDisposable
+
+<DtwoCard>
+        @if (DofusWindow == null)
+        {
+            <DtwoAlert ShowIcon=true Style="EAlertStyle.Danger">Erreur lors de la selection du personnage ...</DtwoAlert>
+        }
+        else if (DofusWindow.Character != null)
+        {
+            <DtwoText TextStyle="ETextStyle.H5" class="rz-pt-8 rz-mb-6">@DofusWindow.Character.Name</DtwoText>
+            <DtwoImage Path="@API.SpritesManager.GetCharacterIconPath(DofusWindow.Character.Breed, DofusWindow.Character.Sex)"/>
+            <DtwoButton OnClicked="(args) => OnClickStopProcess()">Stop</DtwoButton>
+        }
+        else
+        {
+            <DtwoAlert ShowIcon=true Style="EAlertStyle.Warning">En attente de selection du personnage ...</DtwoAlert>
+        }
+
+</DtwoCard>
+
+@code {
+    [Parameter]
+    public DofusWindow? DofusWindow { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (DofusWindow != null)
+        {
+            DofusWindow.OnSetCharacter += OnSetCharacter;
+        }
+    }
+
+    private void OnSetCharacter()
+    {
+        this.InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    private void OnClickStopProcess()
+    {
+        if (DofusWindow == null)
+        {
+            return;
+        }
+
+        AppManager.Core?.StopListenProcess(DofusWindow);
+    }
+
+    public void Dispose()
+    {
+        if (DofusWindow != null)
+        {
+            DofusWindow.OnSetCharacter -= OnSetCharacter;
+        }
+    }
+}

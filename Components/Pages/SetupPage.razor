@@ -1,0 +1,25 @@
+﻿@page "/Setup"
+@using Dtwo.API;
+@inject NavigationManager NavManager
+
+<DtwoText TextStyle="ETextStyle.H1" class="rz-pt-8">Setup</DtwoText>
+<DtwoText TextStyle="ETextStyle.Subtitle1" class="rz-pb-4">Avant d'aller plus loin, tu dois choisir la version du jeu que tu souhaites utiliser.</DtwoText>
+
+<DofusVersionSelection OnSelectVersion="OnDofusVersionSelected"></DofusVersionSelection>
+
+
+@code {
+    private void OnDofusVersionSelected(API.DofusBase.EDofusVersion dofusVersion)
+    {
+        AppManager.StartCore(dofusVersion, (success) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                if (success)
+                {
+                    NavManager.NavigateTo("/Sniffer");
+                }
+            });
+        });
+    }
+}

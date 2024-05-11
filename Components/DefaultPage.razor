@@ -1,0 +1,18 @@
+﻿<DtwoTabs Tabs="m_pageTabs" />
+
+@code {
+    [Parameter]
+    public List<Dtwo.API.View.Tab> Tabs { get; set; } = new List<Dtwo.API.View.Tab>();
+
+    private List<Dtwo.API.View.Components.Navigation.Tab> m_pageTabs = new List<Dtwo.API.View.Components.Navigation.Tab>();
+
+    protected override void OnInitialized()
+    {
+        foreach (var tab in Tabs)
+        {
+            m_pageTabs.Add(new Dtwo.API.View.Components.Navigation.Tab(tab.Title, tab.Component));
+        }
+
+        base.OnInitialized();
+    }
+}

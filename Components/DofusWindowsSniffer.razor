@@ -1,0 +1,133 @@
+﻿@implements IDisposable
+
+@using System.Diagnostics;
+@using SharpPcap.LibPcap;
+@using Dtwo.API;
+@using Dtwo.Core.Sniffer;
+
+	<DtwoText TextStyle="ETextStyle.H5" class="rz-pt-8 rz-mb-6">Ecouter des fenêtres</DtwoText>
+
+	<DtwoCard>
+		<DtwoText TextStyle="ETextStyle.Caption">@processes.Count fenêtre peuvent être écoutées</DtwoText>
+		<DtwoStack Orientation="EStackOrientation.Horizontal" Gap="10px">
+			<DtwoButton OnClicked="(args) => OnClickListen()" Color="EColor.Secondary">Ecouter</DtwoButton>
+			<DtwoButton OnClicked="(args) => OnClickRefresh()" Color="EColor.Secondary">Refresh</DtwoButton>
+		</DtwoStack>
+
+		@if (alreadyConnectedWindows > 0)
+		{
+			<DtwoAlert Style="EAlertStyle.Warning">
+				Vous avez <b>@alreadyConnectedWindows</b> fenêtres avec des personnages déjà connectés
+			</DtwoAlert>
+		}
+
+		@if (@npcapIsInstalled == false)
+		{
+			<DtwoAlert Style="EAlertStyle.Warning">
+				Vous devez installer Npcap pour faire fonctionner Dtwo. <a href="https://npcap.com/dist/npcap-1.72.exe">Télécharger Npcap</a>
+			</DtwoAlert>
+		}
+	</DtwoCard>
+
+	<DtwoText TextStyle="ETextStyle.H5" class="rz-pt-8 rz-mb-6">Fenêtres en écoute</DtwoText>
+	<DtwoCard>
+		@if (dofusWindows.Count > 0)
+		{
+			<DtwoButton OnClicked="(args) => OnClickStopAll()" Color="EColor.Danger">Arrêter toutes les écoutes</DtwoButton>
+			<DtwoGrid Gap="5px" style="margin-top:5px;">
+				@foreach (var dofusWindow in dofusWindows)
+				{
+					<DtwoGridItem Size="2" SizeLG="2" SizeXX="2" SizeXL="2" SizeMD="3" SizeSM="4" SizeXS="6">
+						<DofusWindowsSniffer_WindowItem DofusWindow="@dofusWindow" />
+					</DtwoGridItem>
+				}
+			</DtwoGrid>
+		}
+	</DtwoCard>
+
+@code {
+	private IReadOnlyCollection<NetStat.NetstatEntry> processes = new List<NetStat.NetstatEntry>();
+	private int alreadyConnectedWindows = 0;
+	private bool npcapIsInstalled = false;
+	private bool initWithoutNpcap;
+	private bool ListenButtonIsDisabled => processes.Count == 0;
+
+	private List<DofusWindow> dofusWindows => DofusWindow.WindowsList;
+
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+
+		npcapIsInstalled = NetStat.NpcapIsInstalled();
+
+		DofusWindow.OnDofusWindowStoped += OnDofusWindowStopped;
+
+		if (npcapIsInstalled == false)
+		{
+			initWithoutNpcap = true;
+		}
+	}
+
+	private void OnClickRefresh()
+	{
+		RefreshAll();
+	}
+
+	private void RefreshAll()
+	{
+		object lockedState = new object();
+		AppManager.StartProgress(lockedState);
+
+		Task.Factory.StartNew(() =>
+		{
+			npcapIsInstalled = NetStat.NpcapIsInstalled();
+
+			if (npcapIsInstalled)
+			{
+				processes = DofusWindowsFinder.GetProcesses();
+				alreadyConnectedWindows = DofusWindowsFinder.GetAlreadyConnectedWindows();
+			}
+
+			if (initWithoutNpcap && npcapIsInstalled)
+			{
+				LogManager.Log("Npcap a bien été installé", 1);
+				initWithoutNpcap = false;
+			}
+
+			AppManager.StopProgress(lockedState);
+			this.InvokeAsync(this.StateHasChanged);
+		});
+	}
+
+	private void OnClickListen()
+	{
+		object lockedState = new object();
+		AppManager.StartProgress(lockedState);
+		AppManager.Core?.StartupListenProcesses("172", (result, nb) => OnStartProcessEnd(result, nb, lockedState));	
+	}
+
+	private void OnClickStopAll()
+	{
+		AppManager.Core?.StopListenProcesses();
+	}
+
+
+	private void OnDofusWindowStopped(DofusWindow dofusWindow)
+	{
+		RefreshAll();
+
+		this.InvokeAsync(() => { StateHasChanged(); });
+	}
+
+	private void OnStartProcessEnd(bool result, int nb, object lockedState)
+	{
+		AppManager.StopProgress(lockedState);
+	    this.InvokeAsync(() => { StateHasChanged(); });
+	}
+
+	public void Dispose()
+    {
+        DofusWindow.OnDofusWindowStoped -= OnDofusWindowStopped;
+    }
+}

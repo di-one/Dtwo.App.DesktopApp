@@ -1,0 +1,27 @@
+﻿@if (m_page.Tabs != null)
+{
+<DefaultPage Tabs="@m_page.Tabs">
+
+</DefaultPage>
+}
+@if (m_page.Tabs == null)
+{
+	<DynamicComponent Type="@m_page.Type"/>
+}
+
+
+@code {
+	[Parameter]
+	public string TemplateName { get; set; }
+
+	private Dtwo.API.View.Page m_page;
+
+	private Dtwo.API.View.Page GetViewPluginPage() => ViewPluginsManager.FindViewPlugin(TemplateName);
+
+	protected override void OnInitialized()
+	{
+		m_page = GetViewPluginPage();
+
+		base.OnInitialized();
+	}
+}

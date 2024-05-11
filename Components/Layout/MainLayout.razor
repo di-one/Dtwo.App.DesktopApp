@@ -1,0 +1,238 @@
+﻿@implements IDisposable
+@inject IJSRuntime JSRuntime
+@inherits LayoutComponentBase
+
+@if (m_componentsLoaded)
+{
+    <DtwoMainWindowTitlebar 
+        OnMouseDown="(args) => StartDragWindow()" OnClickClose="OnClickClose" OnClickMaximize="OnClickMaximize" OnClickMinimize="OnClickMinimize"/>
+
+    <DtwoMainLayout Settings=AppManager.MainLayoutSettings IsLoading=m_isLoading>
+        @Body
+        </DtwoMainLayout>
+}
+else
+{
+    <div id="loadingScreen" class="d-flex justify-content-center align-items-center" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading ...</p>
+        </div>
+    </div>
+}
+
+@code
+{
+    private bool m_componentsLoaded = false;
+    private bool m_isLoading = false;
+
+    protected override void OnInitialized()
+    {
+        ViewManager.RegisterOnProgressStart(OnProgressStart);
+        ViewManager.RegisterOnProgressStop(OnProgressStop);
+
+        AppManager.OnMainLayoutSettingsUpdated += OnMainLayoutSettingsUpdated;
+
+        base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            if (AppManager.ComponentsProviderSettings != null)
+            {
+                var loadStyles = AppManager.ComponentsProviderSettings.Styles.Select(style =>
+                JSRuntime.InvokeVoidAsync("addStyle", style).AsTask()).ToList();
+
+                var loadScripts = AppManager.ComponentsProviderSettings.Scripts.Select(script =>
+                    JSRuntime.InvokeVoidAsync("addScript", script).AsTask()).ToList();
+
+                // Combine all tasks
+                var allTasks = new List<Task>(loadStyles);
+                allTasks.AddRange(loadScripts);
+
+                //this.StateHasChanged();
+
+                // Attendre que toutes les tâches soient terminées
+                await Task.WhenAll(allTasks);
+            }
+
+            var plugins = ViewPluginsManager.GetViewPlugins();
+
+            foreach (var plugin in plugins)
+            {
+                await JSRuntime.InvokeVoidAsync("addStyle", $"_content/Dtwo.Plugins.{plugin.Infos.Name}/css/plugin.css");
+            }
+
+            m_componentsLoaded = true;
+
+            this.StateHasChanged();
+        }
+    }
+
+    private void OnMainLayoutSettingsUpdated()
+    {
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnProgressStart()
+    {
+        m_isLoading = true;
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnProgressStop()
+    {
+        m_isLoading = false;
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnClickMinimize()
+    {
+        AppManager.MinimizeWindow();
+    }
+
+    private void OnClickMaximize()
+    {
+        AppManager.MaximizeWindow();
+    }
+
+    private void OnClickClose()
+    {
+        AppManager.CloseWindow();
+    }
+
+    private void StartDragWindow()
+    {
+        AppManager.StartDragWindow();
+    }
+
+    public void Dispose()
+    {
+        ViewManager.UnregisterOnProgressStart(OnProgressStart);
+        ViewManager.UnregisterOnProgressStop(OnProgressStop);
+
+        AppManager.OnMainLayoutSettingsUpdated -= OnMainLayoutSettingsUpdated;
+    }
+}
+
+
+@* @using MatBlazor
+@inherits LayoutComponentBase
+@inject IMatToaster Toaster
+@inject NavigationManager NavManager
+
+<PageTitle>Dtwo.Application</PageTitle>
+<MatToastContainer />
+<MudThemeProvider @bind-IsDarkMode="@useDarkMode" Theme="theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<ProgressView></ProgressView>
+
+<MudLayout>
+    <TitleMenu OnClickToggle="OnClickToggle"></TitleMenu>
+    @if (AppManager.Core != null && AppManager.Core.IsStarted)
+    {
+        <MudDrawer @bind-Open="@open" ClipMode="DrawerClipMode.Never" Breakpoint="@Breakpoint.Sm" PreserveOpenState="true" Elevation="1" Variant="@DrawerVariant.Mini">
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+    }
+</MudLayout>
+@if (AppManager.Core == null || AppManager.Core.IsStarted == false)
+{
+    <DofusVersionSelection OnSelectVersion="OnDofusVersionSelected"></DofusVersionSelection>
+}
+
+@code
+{
+    private bool useDarkMode = ViewManager.UseDarkMode;
+    private MudTheme theme = ViewManager.Theme;
+    private bool open = false;
+
+
+    protected override void OnInitialized()
+    {
+        LogManager.OnLog += OnLog;
+
+        ViewManager.OnProgressStart += OnProgressStart;
+        ViewManager.OnProgressStop += OnProgressStop;
+        ViewManager.OnDarkModeChange += OnDarkModeChange;
+
+        base.OnInitialized();
+    }
+
+    private void OnClickToggle()
+    {
+        open = !open;
+    }
+
+    private void OnDofusVersionSelected(API.DofusBase.EDofusVersion dofusVersion)
+    {
+        AppManager.StartCore(dofusVersion, (success) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                if (success)
+                {
+                    NavManager.NavigateTo("/");
+                }
+            });
+        });
+    }
+
+    private void OnLog(LogMessage message)
+    {
+        this.InvokeAsync(() =>
+        {
+            if (message.Priority >= 1)
+            {
+                MatToastType toastType = MatToastType.Dark;
+
+                if (message.Type == API.MessageType.Default) toastType = MatToastType.Success;
+                if (message.Type == API.MessageType.Warning) toastType = MatToastType.Warning;
+                if (message.Type == API.MessageType.Error) toastType = MatToastType.Danger;
+
+                Toaster.Add(message.Text, toastType, message.Title, null, config =>
+                {
+                    if (message.Type == API.MessageType.Error)
+                    {
+                        config.RequireInteraction = true;
+                    }
+                });
+            }
+        });
+    }
+
+    private void OnDarkModeChange()
+    {
+        useDarkMode = ViewManager.UseDarkMode;
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnProgressStart()
+    {
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnProgressStop()
+    {
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        LogManager.OnLog -= OnLog;
+        ViewManager.OnProgressStart -= OnProgressStart;
+        ViewManager.OnProgressStop -= OnProgressStop;
+        ViewManager.OnDarkModeChange -= OnDarkModeChange;
+    }
+} *@

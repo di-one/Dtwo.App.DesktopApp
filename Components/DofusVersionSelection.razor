@@ -1,0 +1,179 @@
+﻿@using Dtwo.API.DofusBase;
+
+<DtwoText TextStyle="ETextStyle.H5" class="rz-pt-8 rz-mb-6">Selection de la version</DtwoText>
+
+<DtwoCard>
+<DtwoStack Orientation="EStackOrientation.Vertical" JustifyContent="EJustifyContent.Center" Gap="10px">
+    <DtwoCard Variant="EVariant.Flat" style="width:100%;">
+        <DtwoStack Orientation="EStackOrientation.Horizontal" JustifyContent="EJustifyContent.Center">
+        <DtwoImage Path="assets/img/dofus_2_icon.png" style="width: 100px; height: 100px; border-radius: 50%;"></DtwoImage>
+                <DtwoStack style="width:100%;">
+                <DtwoText TextStyle="ETextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Version</DtwoText>
+                <DtwoText TextStyle="ETextStyle.Body1"><b>Dofus 2</b></DtwoText>
+
+                    @if (m_updateIdStep == 0 && BindingIsUpdated() == false)
+                    {
+                        <DtwoAlert Style="EAlertStyle.Danger">
+                            <DtwoText TextStyle="ETextStyle.Body1"><b>Binding non à jour</b></DtwoText>
+                            <DtwoText TextStyle="ETextStyle.Body1">Les ids de la version actuelle ne sont pas à jour, veuillez les mettre à jour ou attendre une mise à jour de l'app</DtwoText>
+                        </DtwoAlert>
+
+                        @if (HasJpexsInstalled() == false)
+                        {
+                            <DtwoAlert>
+                                <DtwoText TextStyle="ETextStyle.Body1"><b>Jpexs non installé</b></DtwoText>
+                                <DtwoText TextStyle="ETextStyle.Body1">Pour mettre toi même à jour les ids, tu dois installer Jpexs et te rendre dans les <DtwoHyperLink Path="Options" Text="Options"/> pour réferencer le chemin</DtwoText>
+                            </DtwoAlert>
+                        }
+                        else
+                        {
+                            <DtwoButton OnClicked="(args => OnClickRefreshIds())" Variant="EVariant.Flat" Color="EColor.Secondary" style="margin-top:5px;">Update</DtwoButton>
+                        }
+                    }
+                       
+
+                    @* BindingIsUpdate == true *@
+                    else if (m_updateIdStep == 0)
+                    {
+                        <DtwoButton OnClicked="(args => OnClickDofus2())" Variant="EVariant.Flat" Color="EColor.Secondary" style="margin-top:5px; width:100px;">Start</DtwoButton>
+                        <DtwoStack style="margin-top:5px;" Orientation="EStackOrientation.Horizontal" Gap="5px">
+                            <DtwoIcon Icon="check_circle" Color="EIconColor.Success" />
+                            <DtwoText class="rz-color-success-dark" TextStyle="ETextStyle.Body1"><b>Binding à jour</b></DtwoText>
+                        </DtwoStack>
+                        
+                    }
+
+                    @if (m_updateIdStep == 1)
+                    {
+                        <DtwoText style="margin-top:5px;" TextStyle="ETextStyle.Body1"><b>Chargement des types ...</b></DtwoText>
+                    }
+                    @if (m_updateIdStep == 2)
+                    {
+                        <DtwoText style="margin-top:5px;" TextStyle="ETextStyle.Body1"><b>Chargement des messages ...</b></DtwoText>
+                    }
+                </DtwoStack>
+        </DtwoStack>
+    </DtwoCard>
+
+    <DtwoText TextAlign="ETextAlign.Center" TextStyle="ETextStyle.H3">OU</DtwoText>
+
+    <DtwoCard Variant="EVariant.Flat" style="width:100%;">
+            <DtwoStack Orientation="EStackOrientation.Horizontal" JustifyContent="EJustifyContent.Center">
+            <DtwoImage Path="assets/img/dofus_retro_icon.png" style="width: 100px; height: 100px; border-radius: 50%;"></DtwoImage>
+                <DtwoStack style="width:100%;">
+                <DtwoText TextStyle="ETextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Version</DtwoText>
+                <DtwoText TextStyle="ETextStyle.Body1"><b>Dofus Retro</b></DtwoText>
+                    <DtwoButton OnClicked="(args => OnClickRetro())" Variant="EVariant.Flat" Color="EColor.Secondary" style="margin-top:5px; width:100px;">Start</DtwoButton>
+            </DtwoStack>
+        </DtwoStack>
+    </DtwoCard>
+</DtwoStack>
+</DtwoCard>
+
+
+
+@code {
+    [Parameter]
+    public Action<EDofusVersion> OnSelectVersion { get; set; }
+
+    private int m_updateIdStep = 0;
+    private bool m_loadingResult = false;
+
+    private void OnClickRetro()
+    {
+        OnSelectVersion(EDofusVersion.Retro);
+    }
+
+    private void OnClickDofus2()
+    {
+        OnSelectVersion?.Invoke(EDofusVersion.Two);
+    }
+
+    private bool TypesIdFileExist()
+    {
+        return File.Exists(Paths.Dofus2BindingTypesPath);
+    }
+
+    private bool MessagesIdFileExist()
+    {
+        return File.Exists(Paths.Dofus2BindingPath);
+    }
+
+    public bool HasJpexsInstalled()
+    {
+        if (string.IsNullOrEmpty(Paths.Config.JpexsPath))
+        {
+            return false;
+        }
+
+        if (File.Exists(Paths.Config.JpexsPath) == false)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool BindingIsUpdated()
+    {
+        if (TypesIdFileExist() == false || MessagesIdFileExist() == false || string.IsNullOrEmpty(AppManager.BindingInfos.LastVersionCheck))
+        {
+            return false;    
+        }
+
+        var dofusVersion = Dtwo.API.Dofus2.Version.Text;
+        var lastCheckDofusVersion = AppManager.BindingInfos.LastVersionCheck;
+
+        return dofusVersion == lastCheckDofusVersion;
+    }
+
+    private void OnClickRefreshIds()
+    {
+        // Show first step
+        object lockedState = new object();
+        AppManager.StartProgress(lockedState);
+
+        m_updateIdStep = 1;
+        API.Dofus2.Tools.TypesIdUpdateTool.Parse((successTypes) =>
+        {
+            if (successTypes)
+            {
+                this.InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                // show error message
+                LogManager.LogError("Impossible d'update les ids pour les types, une erreur est survenue", 1);
+                m_updateIdStep = 0;
+                AppManager.StopProgress(lockedState);
+                this.InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Show next step
+            m_updateIdStep = 2;
+            API.Dofus2.Tools.MessagesIdUpdateTool.Parse((successMessages) =>
+            {
+                if (successMessages)
+                {
+                    // Show success message
+                    this.InvokeAsync(StateHasChanged);
+
+                    AppManager.BindingInfos.LastVersionCheck = Dtwo.API.Dofus2.Version.Text;
+                    AppManager.SaveBindingInfos();
+
+                    m_loadingResult = true;
+                }
+                else
+                {
+                    // show error message
+                    LogManager.LogError("Impossible d'update les ids pour les message, une erreur est survenue", 1);
+                }
+
+                m_updateIdStep = 0;
+                AppManager.StopProgress(lockedState);
+                this.InvokeAsync(StateHasChanged);
+            });
+        });
+    }
+}

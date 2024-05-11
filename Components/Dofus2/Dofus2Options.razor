@@ -1,0 +1,9 @@
+﻿<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UpdateIds">Update Ids</MudButton>
+@* <MudTextField @bind-Value="Dtwo.API.Paths.Config.JpexsPath" Label="Standard" Variant="Variant.Text"></MudTextField> *@
+
+@code {
+    private void UpdateIds()
+    {
+        Dtwo.API.Dofus2.Tools.MessagesIdUpdateTool.Parse((result) => LogManager.Log("Ids updated : " + result.ToString(), 1));
+    }
+}
