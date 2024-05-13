@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Reflection;
 using Dtwo.API.View.Components;
 using Dtwo.API.View.Components.Feedback;
+using Dtwo.API.Inputs;
+
 
 
 
@@ -42,10 +44,17 @@ namespace Dtwo.App.DesktopApp
     		builder.Logging.AddDebug();
 #endif
 
+            API.Paths.Init();
+
             LogManager.OnLog += (LogMessage message) =>
             {
-                Debug.WriteLine(message.Text);
+                // Debug
+                if (Configuration.Configuration.Instance.IsDebug)
+                {
+                    Debug.WriteLine(message.Text);
+                }
 
+                // Notification
                 if (message.Priority == 1)
                 {
                     Notification.ESeverity severity = Notification.ESeverity.Info;
@@ -60,6 +69,12 @@ namespace Dtwo.App.DesktopApp
                         Title = message.Title,
                         Text = message.Text,
                     });
+                }
+
+                // Log file
+                if (Configuration.Configuration.Instance.LogToFile)
+                {
+                    LogFile.WriteLog(message);
                 }
             };
 
