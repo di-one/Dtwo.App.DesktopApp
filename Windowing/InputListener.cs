@@ -48,6 +48,9 @@ namespace Dtwo.App.DesktopApp.Windowing
                     {
                         for (int i = 0; i < inputKeys.Count; i++)
                         {
+                            if (m_isListening == false)
+                                break;
+
                             var inputKey = inputKeys[i];
 
                             var asyncKeyState = GetAsyncKeyState((ushort)inputKey.KeyId);
@@ -78,7 +81,6 @@ namespace Dtwo.App.DesktopApp.Windowing
         public void Stop()
         {
             m_isListening = false;
-            m_task?.Dispose();
             m_task = null;
         }
 

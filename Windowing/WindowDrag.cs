@@ -86,6 +86,8 @@ namespace Dtwo.App.DesktopApp.Windowing
         private void StopDragWindow()
         {
             m_isDrag = false;
+            m_inputListener.Dispose();
+            m_inputListener = null;
         }
 
 
