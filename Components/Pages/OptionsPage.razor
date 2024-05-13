@@ -4,6 +4,9 @@
     <DtwoGridItem Size="12">
         <DtwoForm TValue="Dtwo.API.Configuration.PathsConfiguration" Value="@Paths.Config" FormData="@OptionsFormData" />
     </DtwoGridItem>
+    <DtwoGridItem Size="12">
+        <DtwoForm TValue="Configuration.Configuration" Value="@Configuration.Configuration.Instance" FormData="@LogsFormData" />
+    </DtwoGridItem>
 </DtwoGrid>
 
 @code {
@@ -14,5 +17,19 @@
             FieldAsmName = nameof(Paths.Config.JpexsPath),
             Title = "Chemin de JPEXS (facultatif)",
         }
+    });
+
+    private FormData LogsFormData = new FormData("Logs", new List<FormData.Field>()
+    {
+        new FormData.Field()
+        {
+            FieldAsmName = nameof(Configuration.Configuration.IsDebug),
+            Title = "Debug Mode",
+        },
+        new FormData.Field()
+        {
+            FieldAsmName = nameof(Configuration.Configuration.LogToFile),
+            Title = "Ecrire les logs dans un fichier",
+        },
     });
 }
