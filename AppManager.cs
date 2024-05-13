@@ -219,7 +219,26 @@ namespace Dtwo.App.DesktopApp
 
         public static void SaveBindingInfos()
         {
-            File.WriteAllText(Paths.Dofus2BindingInfosPath, Newtonsoft.Json.JsonConvert.SerializeObject(BindingInfos));
+            if (Paths.Dofus2BindingInfosPath == null)
+            {
+                LogManager.LogError("Error on save binding infos : Dofus2BindingInfosPath is null", 1);
+                return;
+            }
+
+            if (Directory.Exists(Paths.Dofus2BindingInfosPath) == false)
+            {
+                Directory.CreateDirectory(Paths.Dofus2BindingInfosPath);
+            }
+
+            try
+            {
+                File.WriteAllText(Paths.Dofus2BindingInfosPath, Newtonsoft.Json.JsonConvert.SerializeObject(BindingInfos));
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError("Error on save binding infos : " + ex.Message, 1);
+                return;
+            }
         }
 
         public static void CloseWindow()
