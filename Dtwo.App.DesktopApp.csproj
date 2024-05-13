@@ -72,10 +72,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\Documents\Dtwo_Git\Dtwo.API.View\Dtwo.API.View.csproj" />
-      <ProjectReference Include="..\..\..\..\Documents\Dtwo_Git\Dtwo.Core\Dtwo.Core.csproj" />
       <ProjectReference Include="..\Dtwo.API.View.Components\Dtwo.API.View.Components.csproj" />
-      <ProjectReference Include="..\Dtwo.App.View.ComponentsProvider.RadzenComponents\Dtwo.App.View.ComponentsProvider.RadzenComponents.csproj" />
+      <ProjectReference Include="..\Dtwo.API.View\Dtwo.API.View.csproj" />
+      <ProjectReference Include="..\Dtwo.Core\Dtwo.Core.csproj" />
     </ItemGroup>
 
 </Project>
