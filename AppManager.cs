@@ -16,6 +16,7 @@ using Dtwo.Plugins;
 using System.Collections.Generic;
 using Dtwo.App.DesktopApp.Windowing;
 using System.Xml;
+using Dtwo.API.Inputs;
 
 
 namespace Dtwo.App.DesktopApp
@@ -101,7 +102,9 @@ namespace Dtwo.App.DesktopApp
 
         public static void Init(ComponentsProviderSettings componentsProviderSettings)
         {
-            API.Paths.Init();
+            WindowsEventsListener.StartListen();
+            InputKeyListener.Instance.StartListen();
+            InputKeyWindow.Init();
 
             LoadBindingInfos();
 
