@@ -46,20 +46,53 @@ else
         {
             if (AppManager.ComponentsProviderSettings != null)
             {
-                var loadStyles = AppManager.ComponentsProviderSettings.Styles.Select(style =>
-                JSRuntime.InvokeVoidAsync("addStyle", style).AsTask()).ToList();
+                List<string> componentProviderStyles = AppManager.ComponentsProviderSettings.Styles;
+                if (componentProviderStyles != null)
+                {
+                    foreach (var style in componentProviderStyles)
+                    {
+                        try
+                        {
+                            System.Diagnostics.Debug.WriteLine("Adding style " + style);
+                            await JSRuntime.InvokeVoidAsync("addStyle", style);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("addStyle error " + ex.Message + " " + ex.ToString());
+                        }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine("No styles found in ComponentsProviderSettings");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("addjs error " + ex.Message + " " + ex.ToString());
+                    }
+                }
 
-                var loadScripts = AppManager.ComponentsProviderSettings.Scripts.Select(script =>
-                    JSRuntime.InvokeVoidAsync("addScript", script).AsTask()).ToList();
+                List<string> componentProviderScripts = AppManager.ComponentsProviderSettings.Scripts;
+                if (componentProviderScripts != null)
+                {
+                    foreach (var script in componentProviderScripts)
+                    {
+                        await JSRuntime.InvokeVoidAsync("addScript", script);
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("No scripts found in ComponentsProviderSettings");
+                }
 
-                // Combine all tasks
-                var allTasks = new List<Task>(loadStyles);
-                allTasks.AddRange(loadScripts);
 
                 //this.StateHasChanged();
-
-                // Attendre que toutes les tâches soient terminées
-                await Task.WhenAll(allTasks);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("No ComponentsProviderSettings found");
             }
 
             var plugins = ViewPluginsManager.GetViewPlugins();

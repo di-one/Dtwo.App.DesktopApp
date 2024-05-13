@@ -7,14 +7,14 @@ namespace Dtwo.App.DesktopApp
     {
         private static List<ViewPlugin> m_viewPlugins = new List<ViewPlugin>();
 
-        public static List<ViewPlugin> GetViewPlugins() => new List<ViewPlugin>(m_viewPlugins);
+        public static List<ViewPlugin>? GetViewPlugins() => new List<ViewPlugin>(m_viewPlugins);
 
         public static void Init()
         {
             PluginsManager.OnLoadPluginEvent += OnLoadPlugin;
         }
 
-        public static API.View.Page FindViewPlugin(string name)
+        public static API.View.Page? FindViewPlugin(string name)
         {
             for (int i = 0; i < m_viewPlugins.Count; i++)
             {

@@ -7,6 +7,10 @@ using System.Reflection;
 using Dtwo.API.View.Components;
 using Dtwo.API.View.Components.Feedback;
 using Dtwo.API.Inputs;
+using System.Runtime.CompilerServices;
+using Dtwo.App.DesktopApp.ComponentsProvider;
+
+
 
 
 
@@ -76,24 +80,20 @@ namespace Dtwo.App.DesktopApp
                 {
                     LogFile.WriteLog(message);
                 }
-            };
+            };          
 
-            var componentAsm = Assembly.Load("Dtwo.App.View.ComponentsProvider.RadzenComponents");
+            Assembly? themeAsm;
+            var componentProvider = ComponentProviderLoader.LoadComponentsProvider("", out themeAsm);
 
-            ComponentResolver.Init(componentAsm);
-
-            var componentProvider = ComponentProviderLoader.LoadComponentsProviders();
+            if (themeAsm != null)
+            {
+                ComponentResolver.Init(themeAsm);
+            }
 
             if (componentProvider != null)
             {
                 componentProvider.Init(builder.Services);
             }
-            else
-            {
-                LogManager.LogError("No components provider found !");
-            }
-
-            
 
             AppManager.Init(componentProvider);
 
@@ -133,5 +133,6 @@ namespace Dtwo.App.DesktopApp
 
             return builder.Build();
         }
+
     }
 }
