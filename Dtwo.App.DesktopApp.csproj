@@ -77,4 +77,8 @@
       <ProjectReference Include="..\Dtwo.Core\Dtwo.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\themes\" />
+    </ItemGroup>
+
 </Project>
