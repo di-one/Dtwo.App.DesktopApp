@@ -225,11 +225,6 @@ namespace Dtwo.App.DesktopApp
                 return;
             }
 
-            if (Directory.Exists(Paths.Dofus2BindingInfosPath) == false)
-            {
-                Directory.CreateDirectory(Paths.Dofus2BindingInfosPath);
-            }
-
             try
             {
                 File.WriteAllText(Paths.Dofus2BindingInfosPath, Newtonsoft.Json.JsonConvert.SerializeObject(BindingInfos));
