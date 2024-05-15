@@ -76,11 +76,6 @@
         <PackageReference Include="MudBlazor" Version="6.19.1" />
     </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.7" />
-  </ItemGroup>
-
     <ItemGroup>
       <ProjectReference Include="..\Dtwo.API.View.Components\Dtwo.API.View.Components.csproj" />
       <ProjectReference Include="..\Dtwo.API.View\Dtwo.API.View.csproj" />
