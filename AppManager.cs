@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using Dtwo.App.DesktopApp.Windowing;
 using System.Xml;
 using Dtwo.API.Inputs;
+using System.Collections;
 
 
 namespace Dtwo.App.DesktopApp
@@ -40,6 +41,7 @@ namespace Dtwo.App.DesktopApp
         public static CoreBase? Core { get; private set; }
         public static ComponentsProviderSettings ComponentsProviderSettings { get; private set; }
         public static MainLayoutSettings MainLayoutSettings { get; private set; }
+        public static List<string>? NoServerIps { get; private set; }
 
 #if WINDOWS
         public static WindowDrag MainWindowDrag;
@@ -106,6 +108,7 @@ namespace Dtwo.App.DesktopApp
             InputKeyListener.Instance.StartListen();
             InputKeyWindow.Init();
 
+            LoadNoServerIps();
             LoadBindingInfos();
 
             ComponentsProviderSettings = componentsProviderSettings;
@@ -126,7 +129,6 @@ namespace Dtwo.App.DesktopApp
 #endif
 
         // Todo : Class for this
-
 
         private static List<MainLayoutSettings.SidebarEntry> GetDefaultSideBarEntries()
         {
@@ -191,6 +193,18 @@ namespace Dtwo.App.DesktopApp
             OnMainLayoutSettingsUpdated?.Invoke();
             MainLayoutSettings.SideBarEntries.AddRange(entries);
         }
+
+        private static void LoadNoServerIps()
+        {
+			if (File.Exists(Paths.NoServerIpsPath) == false)
+            {
+				LogManager.LogError("NoServerIps file not found", 1);
+				return;
+			}
+
+			string content = File.ReadAllText(Paths.NoServerIpsPath);
+			NoServerIps = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(content);
+		}
 
         private static void LoadBindingInfos()
         {

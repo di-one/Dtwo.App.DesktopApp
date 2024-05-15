@@ -104,7 +104,7 @@
 	{
 		object lockedState = new object();
 		AppManager.StartProgress(lockedState);
-		AppManager.Core?.StartupListenProcesses("172", (result, nb) => OnStartProcessEnd(result, nb, lockedState));	
+		AppManager.Core?.StartupListenProcesses(AppManager.NoServerIps, (result, nb) => OnStartProcessEnd(result, nb, lockedState));
 	}
 
 	private void OnClickStopAll()
